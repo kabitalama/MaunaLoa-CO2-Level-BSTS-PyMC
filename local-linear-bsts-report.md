@@ -30,9 +30,9 @@ L_t &= L_{t-1} + \mu_{t-1}, \quad t=1,\dots,T-1
 ```
 
 Here, 
-- $L_t $ is the latent level at time $t $,
-- $\mu_t $ is the time-varying slope (trend),
-- $\epsilon_t $ represents random walk increments in the slope.
+- $L_t$ is the latent level at time $t $,
+- $\mu_t$ is the time-varying slope (trend),
+- $\epsilon_t$ represents random walk increments in the slope.
 
 ### 2. Seasonal Component
 
@@ -42,11 +42,11 @@ The seasonal effect is modeled as 12 monthly parameters with a sum-to-zero const
 \gamma_m \sim \mathcal{N}(0, \sigma_{\gamma}^2) \quad \text{for } m = 1, \dots, 12, \quad \text{with } \sum_{m=1}^{12} \gamma_m = 0.
 ```
 
-For each observation at time $t $, the seasonal effect is given by $\gamma_{m(t)} $, where $m(t) $ is the month corresponding to time $t $.
+For each observation at time $t$, the seasonal effect is given by $\gamma_{m(t)}$, where $m(t)$ is the month corresponding to time $t$.
 
 ### 3. Observation Equation
 
-The observed CO₂ concentration $y_t $ is modeled as the sum of the latent level, the seasonal effect, and observation noise:
+The observed CO₂ concentration $y_t$ is modeled as the sum of the latent level, the seasonal effect, and observation noise:
 
 ```math
 y_t = L_t + \gamma_{m(t)} + \nu_t, \quad \nu_t \sim \mathcal{N}(0, \sigma_{\text{obs}}^2).
@@ -57,8 +57,8 @@ y_t = L_t + \gamma_{m(t)} + \nu_t, \quad \nu_t \sim \mathcal{N}(0, \sigma_{\text
 In our PyMC implementation, the model is constructed as follows:
 
 - **Local Linear Trend:**  
-  - `level0` and `slope0` initialize $L_0 $ and $\mu_0 $.
-  - A Gaussian random walk (`rw_slope`) models the increments $\epsilon_t $, and the full slope is constructed as:
+  - `level0` and `slope0` initialize $L_0$ and $\mu_0$.
+  - A Gaussian random walk (`rw_slope`) models the increments $\epsilon_t$, and the full slope is constructed as:
     ```python
     slope = pm.Deterministic("slope", pm.math.concatenate([[slope0], rw_slope]))
     ```
@@ -83,26 +83,26 @@ In our PyMC implementation, the model is constructed as follows:
 
 ## Interpretation of Parameters
 
-- **$\sigma_{\text{level}} $:**  
-  Controls the variability in the evolution of the latent level $L_t $.
+- **$\sigma_{\text{level}}$:**  
+  Controls the variability in the evolution of the latent level $L_t$.
 
-- **$\sigma_{\mu} $:**  
-  Controls the variability in the slope increments $\epsilon_t $. A small value indicates that the slope (trend) changes slowly over time.
+- **$\sigma_{\mu}$:**  
+  Controls the variability in the slope increments $\epsilon_t$. A small value indicates that the slope (trend) changes slowly over time.
 
-- **$\sigma_{\text{obs}} $:**  
+- **$\sigma_{\text{obs}}$:**  
   Represents the observation noise, reflecting measurement error.
 
-- **$\text{level0} $ and $\text{slope0} $:**  
+- **$\text{level0}$ and $\text{slope0}$:**  
   Initial conditions for the trend.
 
-- **Seasonal effects $\gamma_m $:**  
+- **Seasonal effects $\gamma_m$:**  
   Capture the periodic (monthly) fluctuations. The sum-to-zero constraint ensures that the seasonal component does not introduce an additional overall trend.
 
 ## Forecasting
 
 For forecasting, we use the posterior samples from the model to simulate future values. The forecasting process involves:
 
-1. **Extracting the last latent level and slope** from the training period: $L_{T_{\text{train}}} $ and $\mu_{T_{\text{train}}} $.
+1. **Extracting the last latent level and slope** from the training period: $L_{T_{\text{train}}}$ and $\mu_{T_{\text{train}}}$.
 
 2. **Extrapolating the latent level:**  
    We forecast the latent level deterministically using the last estimated slope:
@@ -112,7 +112,7 @@ For forecasting, we use the posterior samples from the model to simulate future 
    (Optionally, additional noise can be added to represent uncertainty.)
 
 3. **Adding the seasonal effect:**  
-   For each forecasted time point, the corresponding seasonal effect $\gamma_{m(t)} $ (using the test set's month information) is added to produce the forecasted observation:
+   For each forecasted time point, the corresponding seasonal effect $\gamma_{m(t)}$ (using the test set's month information) is added to produce the forecasted observation:
    ```math
    \hat{y}_{T_{\text{train}} + t} = L_{T_{\text{train}} + t} + \gamma_{m(T_{\text{train}} + t)}
    ```

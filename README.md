@@ -5,13 +5,14 @@ This repository contains a collection of Bayesian Structural Time Series (BSTS) 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Installation](#installation)
 - [Data](#data)
 - [Modeling](#modeling)
   - [Simple BSTS Model](#simple-bsts-model)
   - [Local Linear BSTS Model](#local-linear-bsts-model)
 - [Forecasting](#forecasting)
 - [Results and Diagnostics](#results-and-diagnostics)
-- [Installation](#installation)
+
 
 ## Overview
 
@@ -21,6 +22,22 @@ Atmospheric CO₂ measurements at the Mauna Loa Observatory have been collected 
 - **Estimating** model parameters using Markov Chain Monte Carlo (MCMC) sampling.
 - **Forecasting** future CO₂ concentrations by simulating from the posterior distribution.
 - **Validating** model performance via posterior predictive checks and diagnostic plots.
+
+## Installation
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/yourusername/MaunaLoa-BSTS-PyMC.git
+   cd MaunaLoa-BSTS-PyMC
+
+2. **Create a virtual environment and install dependencies:**
+
+``` bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
 ## Data
 
@@ -66,18 +83,3 @@ The repository includes scripts to:
 - Display diagnostic trace plots and summary statistics (e.g., effective sample sizes and R-hat values) to confirm good MCMC convergence.
 
 
-## Installation
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/yourusername/MaunaLoa-BSTS-PyMC.git
-   cd MaunaLoa-BSTS-PyMC
-
-2. **Create a virtual environment and install dependencies:**
-
-``` bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```

@@ -8,8 +8,8 @@ This repository contains an implementation of a local linear Bayesian Structural
 - [Model Implementation](#model-implementation)
 - [Interpretation of Parameters](#interpretation-of-parameters)
 - [Forecasting](#forecasting)
-- [Usage](#usage)
-- [References](#references)
+- [Results](#results)
+- [Conclusion](#conclusion)
 
 ## Model Formulation
 
@@ -17,47 +17,48 @@ Our local linear BSTS model is built on the following components:
 
 ### 1. Local Linear Trend
 
-We model the latent level (trend) \( L_t \) and its slope \( \mu_t \) using a local linear trend formulation. The model is specified as:
+We model the latent level (trend) $L_t$ and its slope $\mu_t$ using a local linear trend formulation. The model is specified as:
 
-\[
+
+```math
 \begin{aligned}
 L_0 &\sim \mathcal{N}(y_0, \sigma_{L0}^2) \quad &\text{(Initial level)} \\
 \mu_0 &\sim \mathcal{N}(0, \sigma_{\mu0}^2) \quad &\text{(Initial slope)} \\
 \mu_t &= \mu_{t-1} + \epsilon_t, \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\mu}^2), \quad t=1,\dots,T-1 \\
 L_t &= L_{t-1} + \mu_{t-1}, \quad t=1,\dots,T-1 
 \end{aligned}
-\]
+```
 
 Here, 
-- \( L_t \) is the latent level at time \( t \),
-- \( \mu_t \) is the time-varying slope (trend),
-- \( \epsilon_t \) represents random walk increments in the slope.
+- $L_t $ is the latent level at time $t $,
+- $\mu_t $ is the time-varying slope (trend),
+- $\epsilon_t $ represents random walk increments in the slope.
 
 ### 2. Seasonal Component
 
 The seasonal effect is modeled as 12 monthly parameters with a sum-to-zero constraint:
 
-\[
+```math
 \gamma_m \sim \mathcal{N}(0, \sigma_{\gamma}^2) \quad \text{for } m = 1, \dots, 12, \quad \text{with } \sum_{m=1}^{12} \gamma_m = 0.
-\]
+```
 
-For each observation at time \( t \), the seasonal effect is given by \( \gamma_{m(t)} \), where \( m(t) \) is the month corresponding to time \( t \).
+For each observation at time $t $, the seasonal effect is given by $\gamma_{m(t)} $, where $m(t) $ is the month corresponding to time $t $.
 
 ### 3. Observation Equation
 
-The observed CO₂ concentration \( y_t \) is modeled as the sum of the latent level, the seasonal effect, and observation noise:
+The observed CO₂ concentration $y_t $ is modeled as the sum of the latent level, the seasonal effect, and observation noise:
 
-\[
+```math
 y_t = L_t + \gamma_{m(t)} + \nu_t, \quad \nu_t \sim \mathcal{N}(0, \sigma_{\text{obs}}^2).
-\]
+```
 
 ## Model Implementation
 
 In our PyMC implementation, the model is constructed as follows:
 
 - **Local Linear Trend:**  
-  - `level0` and `slope0` initialize \( L_0 \) and \( \mu_0 \).
-  - A Gaussian random walk (`rw_slope`) models the increments \( \epsilon_t \), and the full slope is constructed as:
+  - `level0` and `slope0` initialize $L_0 $ and $\mu_0 $.
+  - A Gaussian random walk (`rw_slope`) models the increments $\epsilon_t $, and the full slope is constructed as:
     ```python
     slope = pm.Deterministic("slope", pm.math.concatenate([[slope0], rw_slope]))
     ```
@@ -80,75 +81,75 @@ In our PyMC implementation, the model is constructed as follows:
     y_obs = pm.Normal("y_obs", mu=mu_obs, sigma=sigma_obs, observed=y_train)
     ```
 
-The full model is defined in the script `local_linear_bsts.py` (or similar).
-
 ## Interpretation of Parameters
 
-- **\( \sigma_{\text{level}} \):**  
-  Controls the variability in the evolution of the latent level \( L_t \).
+- **$\sigma_{\text{level}} $:**  
+  Controls the variability in the evolution of the latent level $L_t $.
 
-- **\( \sigma_{\mu} \):**  
-  Controls the variability in the slope increments \( \epsilon_t \). A small value indicates that the slope (trend) changes slowly over time.
+- **$\sigma_{\mu} $:**  
+  Controls the variability in the slope increments $\epsilon_t $. A small value indicates that the slope (trend) changes slowly over time.
 
-- **\( \sigma_{\text{obs}} \):**  
+- **$\sigma_{\text{obs}} $:**  
   Represents the observation noise, reflecting measurement error.
 
-- **\( \text{level0} \) and \( \text{slope0} \):**  
+- **$\text{level0} $ and $\text{slope0} $:**  
   Initial conditions for the trend.
 
-- **Seasonal effects \( \gamma_m \):**  
+- **Seasonal effects $\gamma_m $:**  
   Capture the periodic (monthly) fluctuations. The sum-to-zero constraint ensures that the seasonal component does not introduce an additional overall trend.
 
 ## Forecasting
 
 For forecasting, we use the posterior samples from the model to simulate future values. The forecasting process involves:
 
-1. **Extracting the last latent level and slope** from the training period: \( L_{T_{\text{train}}} \) and \( \mu_{T_{\text{train}}} \).
+1. **Extracting the last latent level and slope** from the training period: $L_{T_{\text{train}}} $ and $\mu_{T_{\text{train}}} $.
 
 2. **Extrapolating the latent level:**  
    We forecast the latent level deterministically using the last estimated slope:
-   \[
-   L_{T_{\text{train}} + t} = L_{T_{\text{train}}} + \mu_{T_{\text{train}}} \times t, \quad t=1,\dots,n_{\text{forecast}}.
-   \]
+   ```math
+   L_{T_{\text{train}} + t} = L_{T_{\text{train}}} + \mu_{T_{\text{train}}} \times t, \quad t=1,\dots,n_{\text{forecast}}
+   ```
    (Optionally, additional noise can be added to represent uncertainty.)
 
 3. **Adding the seasonal effect:**  
-   For each forecasted time point, the corresponding seasonal effect \( \gamma_{m(t)} \) (using the test set's month information) is added to produce the forecasted observation:
-   \[
-   \hat{y}_{T_{\text{train}} + t} = L_{T_{\text{train}} + t} + \gamma_{m(T_{\text{train}} + t)}.
-   \]
+   For each forecasted time point, the corresponding seasonal effect $\gamma_{m(t)} $ (using the test set's month information) is added to produce the forecasted observation:
+   ```math
+   \hat{y}_{T_{\text{train}} + t} = L_{T_{\text{train}} + t} + \gamma_{m(T_{\text{train}} + t)}
+   ```
 
 4. **Summarizing and Visualizing:**  
    The forecast is summarized by calculating the mean forecast, along with a 95% credible interval. Additionally, an ensemble of forecast trajectories is plotted to illustrate uncertainty.
 
 See the forecasting section of the code for a detailed simulation of future latent levels and seasonal effects.
 
-## Usage
+## Results
 
-1. **Data Preparation:**  
-   - Place the `co2-mm-mlo.csv` file in the `./data` directory.
-   - Ensure the file contains the columns `Date` and `Interpolated`.
+### Forecast (CO2 levels)
 
-2. **Running the Model:**  
-   - Execute the script (e.g., `local_linear_bsts.py`) to partition the data into training (all but the last 10 years) and test sets, fit the model on the training data, and generate posterior samples.
+![alt text](viz/local-linear-bsts-forecast.png)
 
-3. **Forecasting and Evaluation:**  
-   - The script simulates forecasts for the test set (last 10 years) and produces plots comparing forecasted values to actual observations.
-   - Diagnostic plots (trace plots, posterior predictive checks) are generated for model evaluation.
+### Trend
 
-## References
+![alt text](viz/local-linear-bsts-latent-level-estimate.png)
 
-- Box, G. E. P., Jenkins, G. M., Reinsel, G. C., & Ljung, G. M. (2015). *Time series analysis: Forecasting and control* (5th ed.). Wiley.
-- Durbin, J., & Koopman, S. J. (2012). *Time series analysis by state space methods* (2nd ed.). Oxford University Press.
-- Hyndman, R. J., & Athanasopoulos, G. (2018). *Forecasting: principles and practice* (2nd ed.). OTexts.
-- Rasmussen, C. E., & Williams, C. K. I. (2006). *Gaussian processes for machine learning*. MIT Press.
-- Salvatier, J., Wiecki, T. V., & Fonnesbeck, C. (2016). Probabilistic programming in Python using PyMC3. *PeerJ Computer Science, 2*, e55.
-- Vehtari, A., Gelman, A., & Gabry, J. (2017). Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. *Statistics and Computing, 27*(5), 1413–1432.
+### Local Linear BSTS Summary
 
-## Contributing
+![alt text](viz/local-linear-bsts-summary-statistic.png)
 
-Contributions to improve the model, add new features, or enhance the documentation are welcome. Please open an issue or submit a pull request.
 
-## License
+## Conclusion
 
-This project is licensed under the MIT License.
+**Key Observations:**
+- The local linear BSTS model decomposes the CO₂ time series into a slowly evolving trend and a clear seasonal pattern.
+- The latent level captures the gradual upward trend, while the seasonal component reflects recurring monthly fluctuations.
+
+**Limitations:**
+- Forecasts based on a constant slope may not fully capture potential acceleration in the trend.
+- The deterministic extrapolation approach may understate uncertainty in long-term predictions.
+- Residual autocorrelation and potential non-linear dynamics are not explicitly modeled.
+
+**Further Improvements:**
+- Incorporate a dynamic or non-linear trend component to better reflect changing growth rates.
+- Add an autoregressive structure to model temporal dependencies in the residuals.
+- Introduce external covariates (e.g., ENSO indices) to account for additional sources of variability.
+- Explore alternative forecasting methods that more robustly quantify forecast uncertainty.

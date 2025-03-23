@@ -34,6 +34,8 @@ Two types of BSTS models are implemented in this project:
 
 ### Simple BSTS Model
 
+***NOTE: This model is intended for initial exploration and understanding of the data. It decomposes the time series using a basic local level (Gaussian random walk) for the trend and a seasonal component with 12 discrete parameters (one per month).  While useful for exploratory analysis, this model does not capture the dynamic evolution of the trend as effectively as the local linear approach.***
+
 - **Components:**
   - **Local Level (Trend):** Modeled as a Gaussian random walk.
   - **Seasonality:** Modeled with 12 discrete parameters (one for each month) constrained to sum to zero.

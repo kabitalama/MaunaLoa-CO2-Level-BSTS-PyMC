@@ -107,17 +107,16 @@ For forecasting, we use the posterior samples from the model to simulate future 
 2. **Extrapolating the latent level:**  
    We forecast the latent level deterministically using the last estimated slope:
    
-    ```math
-    L_{T_{\text{train}} + t} = L_{T_{\text{train}}} + \mu_{T_{\text{train}}} \times t, \quad t=1,\dots,n_{\text{forecast}}
-    ```
-   (Optionally, additional noise can be added to represent uncertainty.)
+```math
+L_{T_{\text{train}} + t} = L_{T_{\text{train}}} + \mu_{T_{\text{train}}} \times t, \quad t=1,\dots,n_{\text{forecast}}
+```
 
 3. **Adding the seasonal effect:**  
    For each forecasted time point, the corresponding seasonal effect $\gamma_{m(t)}$ (using the test set's month information) is added to produce the forecasted observation:
    
-   ```math
-   \hat{y}_{T_{\text{train}} + t} = L_{T_{\text{train}} + t} + \gamma_{m(T_{\text{train}} + t)}
-   ```
+```math
+\hat{y}_{T_{\text{train}} + t} = L_{T_{\text{train}} + t} + \gamma_{m(T_{\text{train}} + t)}
+```
 
 4. **Summarizing and Visualizing:**  
    The forecast is summarized by calculating the mean forecast, along with a 95% credible interval. Additionally, an ensemble of forecast trajectories is plotted to illustrate uncertainty.
